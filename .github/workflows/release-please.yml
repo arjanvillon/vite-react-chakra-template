@@ -1,0 +1,33 @@
+name: Generate release
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+  pull-requests: write
+  
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Run release please and open a Pull request to dev branch
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          target-branch: dev
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+  create-pull-request:
+    needs: [release-please]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Pull Request
+        run: gh pr create  --head dev --base main --title "Merge dev into main" --body "Make sure to merge release branch to dev first. Created by Github Actions" --repo $GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
